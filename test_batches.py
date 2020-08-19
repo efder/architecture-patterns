@@ -1,11 +1,6 @@
 from datetime import timedelta
 from model import *
 
-today = date.today()
-tomorrow = today + timedelta(days=1)
-later = tomorrow + timedelta(days=10)
-
-
 def make_batch_and_line(sku, batch_qty, line_qty):
     return (
         Batch("batch-001", sku, batch_qty, eta=date.today()),
@@ -37,43 +32,23 @@ def test_can_allocate_if_available_equal_to_required():
     assert batch.can_allocate(line)
 
 
-def test_can_allocate_if_skus_are_same():
-    batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine("order-ref", "SMALL-TABLE", 10)
-    assert batch.can_allocate(line)
-
-
-def test_cannot_allocate_if_skus_are_different():
-    batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
-    line = OrderLine("order-ref", "DESK-LAMP", 10)
-    assert batch.can_allocate(line) is False
-
-
-def test_cannot_allocate_same_line_twice():
-    batch = Batch("batch-001", "SMALL-TABLE", qty=30, eta=date.today())
-    line = OrderLine("order-ref", "SMALL-TABLE", 10)
-    assert batch.can_allocate(line)
+def test_allocation_is_idempotent():
+    batch, line = make_batch_and_line("ANGULAR-DESK", 20, 2)
     batch.allocate(line)
-    assert batch.can_allocate(line) is False
+    batch.allocate(line)
+    assert batch.available_quantity == 18
 
 
-def test_prefers_warehouse_batches_to_shipments():
-    batch_in_warehouse, line = make_batch_and_line("DESK-LAMP", 10, 8)
-    batch_tomorrow = Batch("batch-002", "DESK-LAMP", 10, tomorrow)
-    batches = Batches()
-    batches.add_batch(batch_in_warehouse)
-    batches.add_batch(batch_tomorrow)
-    selected_batch = batches.allocate_to(line)
-    assert selected_batch == batch_in_warehouse
+def test_deallocate():
+    batch, line = make_batch_and_line("EXPENSIVE-FOOTSTOOL", 20, 2)
+    batch.allocate(line)
+    batch.deallocate(line)
+    assert batch.available_quantity == 20
 
 
-def test_prefers_earlier_batches():
-    batch_in_warehouse, line = make_batch_and_line("DESK-LAMP", 10, 8)
-    batch_tomorrow = Batch("batch-002", "DESK-LAMP", 10, tomorrow)
-    batch_later = Batch("batch-003", "DESK-LAMP", 10, later)
-    batches = Batches()
-    batches.add_batch(batch_in_warehouse)
-    batches.add_batch(batch_tomorrow)
-    batches.add_batch(batch_later)
-    selected_batch = batches.allocate_to(line)
-    assert selected_batch == batch_in_warehouse
+def test_can_only_deallocate_allocated_lines():
+    batch, unallocated_line = make_batch_and_line("DECORATIVE-TRINKET", 20, 2)
+    batch.deallocate(unallocated_line)
+    assert batch.available_quantity == 20
+
+
