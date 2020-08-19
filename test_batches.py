@@ -1,6 +1,5 @@
-from datetime import date, timedelta
+from datetime import timedelta
 from model import *
-import pytest
 
 today = date.today()
 tomorrow = today + timedelta(days=1)
@@ -13,6 +12,7 @@ def make_batch_and_line(sku, batch_qty, line_qty):
         OrderLine("oder-123", sku, line_qty)
     )
 
+
 def test_allocating_to_a_batch_reduces_the_available_quantity():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
     line = OrderLine("order-ref", "SMALL-TABLE", 2)
@@ -21,34 +21,41 @@ def test_allocating_to_a_batch_reduces_the_available_quantity():
 
     assert batch.available_quantity == 18
 
+
 def test_can_allocate_if_available_greater_than_required():
     batch, line = make_batch_and_line("SMALL-TABLE", 10, 8)
-    assert batch.can_allocate(line) == True
+    assert batch.can_allocate(line)
+
 
 def test_cannot_allocate_if_available_smaller_than_required():
     batch, line = make_batch_and_line("SMALL-TABLE", 8, 10)
-    assert batch.can_allocate(line) == False
+    assert batch.can_allocate(line) is False
+
 
 def test_can_allocate_if_available_equal_to_required():
     batch, line = make_batch_and_line("SMALL-TABLE", 10, 10)
-    assert batch.can_allocate(line) == True
+    assert batch.can_allocate(line)
 
-def  test_can_allocate_if_skus_are_same():
+
+def test_can_allocate_if_skus_are_same():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
     line = OrderLine("order-ref", "SMALL-TABLE", 10)
-    assert batch.can_allocate(line) == True
+    assert batch.can_allocate(line)
+
 
 def test_cannot_allocate_if_skus_are_different():
     batch = Batch("batch-001", "SMALL-TABLE", qty=20, eta=date.today())
     line = OrderLine("order-ref", "DESK-LAMP", 10)
-    assert batch.can_allocate(line) == False
+    assert batch.can_allocate(line) is False
+
 
 def test_cannot_allocate_same_line_twice():
     batch = Batch("batch-001", "SMALL-TABLE", qty=30, eta=date.today())
     line = OrderLine("order-ref", "SMALL-TABLE", 10)
-    assert batch.can_allocate(line) == True
+    assert batch.can_allocate(line)
     batch.allocate(line)
-    assert batch.can_allocate(line) == False
+    assert batch.can_allocate(line) is False
+
 
 def test_prefers_warehouse_batches_to_shipments():
     batch_in_warehouse, line = make_batch_and_line("DESK-LAMP", 10, 8)
@@ -58,7 +65,8 @@ def test_prefers_warehouse_batches_to_shipments():
     batches.add_batch(batch_tomorrow)
     selected_batch = batches.allocate_to(line)
     assert selected_batch == batch_in_warehouse
-    
+
+
 def test_prefers_earlier_batches():
     batch_in_warehouse, line = make_batch_and_line("DESK-LAMP", 10, 8)
     batch_tomorrow = Batch("batch-002", "DESK-LAMP", 10, tomorrow)
