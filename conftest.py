@@ -2,9 +2,6 @@ import pytest
 from sqlalchemy import create_engine, Table, Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import sessionmaker, clear_mappers
 
-from orm import metadata, start_mappers
-
-
 @pytest.fixture
 def in_memory_db():
     # Create the engine
@@ -25,10 +22,10 @@ def in_memory_db():
     create_batches = (
         'CREATE TABLE batches ('
         'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-        'reference TEXT,'
-        'sku TEXT,'
+        'reference TEXT  NOT NULL UNIQUE,'
+        'sku TEXT NOT NULL,'
         '_purchased_quantity INTEGER NOT NULL,'
-        'eta DATE NOT NULL'
+        'eta DATE'
         ");"
     )
 
@@ -45,33 +42,6 @@ def in_memory_db():
     )
 
     session.execute(create_allocations)
-
-    # # Create the tables
-    # order_lines = Table(
-    #     'order_lines', metadata,
-    #     Column('id', Integer, primary_key=True, autoincrement=True),
-    #     Column('sku', String(255)),
-    #     Column('qty', Integer, nullable=False),
-    #     Column('orderid', String(255)),
-    # )
-    #
-    # batches = Table(
-    #     'batches', metadata,
-    #     Column('id', Integer, primary_key=True, autoincrement=True),
-    #     Column('reference', String(255)),
-    #     Column('sku', String(255)),
-    #     Column('_purchased_quantity', Integer, nullable=False),
-    #     Column('eta', Date, nullable=True),
-    # )
-    #
-    # allocations = Table(
-    #     'allocations', metadata,
-    #     Column('id', Integer, primary_key=True, autoincrement=True),
-    #     Column('orderline_id', ForeignKey('order_lines.id')),
-    #     Column('batch_id', ForeignKey('batches.id')),
-    # )
-
-    # metadata.create_all(engine)
     return engine
 
 

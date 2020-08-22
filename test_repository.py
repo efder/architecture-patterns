@@ -4,7 +4,7 @@ import repository
 
 def test_repository_can_save_a_batch(session):
     batch = model.Batch("batch1", "RUSTY-SOAPDISH", 100, eta=None)
-
+    model.allocate(model.OrderLine("order-001", "RUSTY-SOAPDISH", 10), [batch])
     repo = repository.SqlAlchemyRepository(session)
     repo.add(batch)
     session.commit()
@@ -54,6 +54,8 @@ def test_repository_can_retrieve_a_batch_with_allocations(session):
 
     repo = repository.SqlAlchemyRepository(session)
     retrieved = repo.get("batch1")
+
+    # repo.list()
 
     expected = model.Batch("batch1", "GENERIC-SOFA", 100, eta=None)
     assert retrieved == expected  # Batch.__eq__ only compares reference
