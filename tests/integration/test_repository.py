@@ -1,6 +1,7 @@
 # pylint: disable=protected-access
-import model
-import repository
+import allocation.domain.model
+import allocation.adapters.repository
+
 
 def test_repository_can_save_a_batch(session):
     batch = model.Batch("batch1", "RUSTY-SOAPDISH", 100, eta=None)
@@ -26,6 +27,7 @@ def insert_order_line(session):
     )
     return orderline_id
 
+
 def insert_batch(session, batch_id):
     session.execute(
         'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
@@ -37,6 +39,7 @@ def insert_batch(session, batch_id):
         dict(batch_id=batch_id)
     )
     return batch_id
+
 
 def insert_allocation(session, orderline_id, batch_id):
     session.execute(

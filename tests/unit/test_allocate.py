@@ -1,4 +1,4 @@
-from model import Batch, OrderLine, allocate, OutOfStock
+from allocation.domain.model import Batch, OrderLine, allocate, OutOfStock
 from datetime import date, timedelta
 import pytest
 
@@ -25,11 +25,10 @@ def test_prefers_earlier_batches():
     selected_batch_ref = allocate(line, [medium, earliest, latest])
     assert selected_batch_ref == earliest.reference and earliest.available_quantity == 90
 
+
 def test_raises_out_of_stock_exception_if_cannot_allocate():
     batch = Batch('batch1', 'SMALL-FORK', 10, eta=today)
     allocate(OrderLine('order1', 'SMALL-FORK', 10), [batch])
 
     with pytest.raises(OutOfStock, match='SMALL-FORK'):
         allocate(OrderLine('order2', 'SMALL-FORK', 1), [batch])
-
-
